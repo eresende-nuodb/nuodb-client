@@ -32,6 +32,8 @@ class Globals(object):
     pkgroot = None
     stageroot = None
 
+    version = None
+    build_number = None
     target = None
 
     isverbose = False

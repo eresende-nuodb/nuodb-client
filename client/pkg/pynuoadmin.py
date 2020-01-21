@@ -19,6 +19,8 @@ class PyNuoadminPackage(Package):
 
         self._file = None
         self._ac_file = None
+        self._ac_version = None
+        self.ac_basedir = None
 
         self.staged = [Stage(self.__PKGNAME,
                              title='NuoAdmin Driver',
@@ -64,6 +66,10 @@ class PyNuoadminPackage(Package):
         self.stage.stage('doc', ['README.rst'])
 
         acdir = os.path.join('python', 'argcomplete')
+        if not self.ac_basedir:
+            acpypi = PyPIMetadata('argcomplete')
+            self._ac_version = acpypi.version
+            self.ac_basedir = os.path.join(self.pkgroot, 'argcomplete-{}'.format(self._ac_version))
         self.stage.stage(acdir, [os.path.join(self.ac_basedir, 'argcomplete/')])
         self.stage.stage(acdir, [os.path.join(self.ac_basedir, 'LICENSE.rst')])
 
