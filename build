@@ -8,6 +8,7 @@ Command-line tool for building the NuoDB client package.
 import os
 import sys
 import argparse
+import platform
 
 from string import Template
 from datetime import datetime
@@ -32,9 +33,10 @@ USER = 'nuodb'
 GROUP = 'nuodb'
 
 def build_clients(packages):
-    version = datetime.now().strftime("%Y%m%d")
+    version = Globals.version
+    build_number = Globals.build_number
     target = Globals.target
-    pkgname = 'nuodb-client-{}.{}'.format(version, target)
+    pkgname = 'nuodb-client-{}-{}.{}'.format(version, build_number, target)
 
     # This is handled inside Package so it can deal with prerequisites etc.
     Package.build_all(packages)
@@ -92,7 +94,10 @@ def create_package(pkgname):
         out = '{}.tar.gz'.format(pkgname)
         rmfile(out)
         info("Creating {} ...".format(out))
-        run(['tar', '-c', '-z', '-f', out, '--owner=%s' % USER, '--group=%s' % GROUP, pkgname], cwd=Globals.finalroot)
+        if platform.system() == "Darwin":
+            run(['tar', '-c', '-z', '-f', out, pkgname], cwd=Globals.finalroot)
+        else:
+            run(['tar', '-c', '-z', '-f', out, '--owner=%s' % USER, '--group=%s' % GROUP, pkgname], cwd=Globals.finalroot)
     else:
         out = '{}.zip'.format(pkgname)
         rmfile(out)
@@ -127,6 +132,18 @@ def main():
         help="Client platform")
 
     parser.add_argument(
+        "-b",
+        "--build",
+        default='0',
+        help="Build number")
+
+    parser.add_argument(
+        "-r",
+        "--version",
+        default=datetime.now().strftime("%Y%m%d"),
+        help="Official release version")
+
+    parser.add_argument(
         "--no-package",
         action="store_true",
         help="Don't create the final tarball/zip file.")
@@ -151,7 +168,7 @@ def main():
 
     options = parser.parse_args()
 
-    Globals.setup(isverbose=options.verbose, target=options.platform)
+    Globals.setup(isverbose=options.verbose, target=options.platform, version=options.version, build_number=options.build)
 
     try:
         if options.clean or options.real_clean:
